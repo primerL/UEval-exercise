@@ -385,46 +385,11 @@
 
         .review-controls {
             display: flex;
-            flex-direction: column;
             gap: 15px;
+            align-items: center;
             padding: 20px;
             background: #f8f9fa;
             border-top: 1px solid #e9ecef;
-        }
-
-        .review-buttons {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .feedback-section {
-            margin-top: 15px;
-        }
-
-        .feedback-label {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .feedback-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            resize: vertical;
-            min-height: 60px;
-            font-family: inherit;
-        }
-
-        .feedback-input:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
 
         .btn {
@@ -729,11 +694,6 @@
                 align-items: stretch;
             }
 
-            .review-buttons {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
             .btn-export {
                 margin-left: 0;
                 margin-top: 10px;
@@ -741,10 +701,6 @@
 
             .current-status {
                 margin-left: 0;
-                margin-top: 10px;
-            }
-
-            .feedback-section {
                 margin-top: 10px;
             }
         }
@@ -917,11 +873,6 @@
                 return `<span class="current-status ${status}">${statusText}</span>`;
             }
 
-            getFeedback(itemId) {
-                const review = this.reviews[itemId];
-                return review && review.feedback ? review.feedback : '';
-            }
-
             renderItems() {
                 const container = document.getElementById('items-container');
                 
@@ -959,25 +910,14 @@
                             ${this.renderModelSection(item, 'Gemini', item.Gemini_text, item.Gemini_image, item.Gemini_text_result, item.Gemini_image_result)}
                         </div>
                         <div class="review-controls">
-                            <div class="review-buttons">
-                                <button class="btn btn-approve" onclick="reviewSystem.approveItem('${item.id}')">
-                                    ✅ 通过
-                                </button>
-                                <button class="btn btn-reject" onclick="reviewSystem.rejectItem('${item.id}')">
-                                    ❌ 拒绝
-                                </button>
-                                <div class="current-status" id="status-${item.id}">
-                                    ${this.getStatusDisplay(item.id)}
-                                </div>
-                            </div>
-                            <div class="feedback-section">
-                                <label class="feedback-label" for="feedback-${item.id}">审核反馈 (可选):</label>
-                                <textarea 
-                                    class="feedback-input" 
-                                    id="feedback-${item.id}" 
-                                    placeholder="请输入审核原因或反馈意见..."
-                                    data-item-id="${item.id}"
-                                >${this.getFeedback(item.id)}</textarea>
+                            <button class="btn btn-approve" onclick="reviewSystem.approveItem('${item.id}')">
+                                ✅ 通过
+                            </button>
+                            <button class="btn btn-reject" onclick="reviewSystem.rejectItem('${item.id}')">
+                                ❌ 拒绝
+                            </button>
+                            <div class="current-status" id="status-${item.id}">
+                                ${this.getStatusDisplay(item.id)}
                             </div>
                         </div>
                     </div>
@@ -1118,26 +1058,14 @@
             }
 
             approveItem(itemId) {
-                const feedback = document.getElementById(`feedback-${itemId}`).value.trim();
-                this.reviews[itemId] = { 
-                    approved: true, 
-                    rejected: false, 
-                    feedback: feedback,
-                    timestamp: new Date().toISOString() 
-                };
+                this.reviews[itemId] = { approved: true, rejected: false, timestamp: new Date().toISOString() };
                 this.saveReviews();
                 this.updateItemStatus(itemId);
                 this.updateStats();
             }
 
             rejectItem(itemId) {
-                const feedback = document.getElementById(`feedback-${itemId}`).value.trim();
-                this.reviews[itemId] = { 
-                    approved: false, 
-                    rejected: true, 
-                    feedback: feedback,
-                    timestamp: new Date().toISOString() 
-                };
+                this.reviews[itemId] = { approved: false, rejected: true, timestamp: new Date().toISOString() };
                 this.saveReviews();
                 this.updateItemStatus(itemId);
                 this.updateStats();
@@ -1189,7 +1117,6 @@
                         task_type: item.task_type,
                         approved: review.approved || false,
                         rejected: review.rejected || false,
-                        feedback: review.feedback || '',
                         timestamp: review.timestamp || null
                     };
                 });
@@ -1204,14 +1131,13 @@
             }
 
             convertToCSV(data) {
-                const headers = ['ID', 'Prompt', 'Task Type', 'Approved', 'Rejected', 'Feedback', 'Timestamp'];
+                const headers = ['ID', 'Prompt', 'Task Type', 'Approved', 'Rejected', 'Timestamp'];
                 const rows = data.map(item => [
                     item.id,
                     `"${item.prompt.replace(/"/g, '""')}"`,
                     item.task_type,
                     item.approved,
                     item.rejected,
-                    `"${(item.feedback || '').replace(/"/g, '""')}"`,
                     item.timestamp || ''
                 ]);
 
